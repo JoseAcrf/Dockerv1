@@ -31,7 +31,7 @@ RUN set -eux; \
   ARCH="$(dpkg --print-architecture)"; \
   case "$ARCH" in amd64|arm64) : ;; *) echo "unsupported arch: $ARCH"; exit 1;; esac; \
   curl -fsSL -o /tmp/wkhtmltox.deb \
-    "https://github.com/wkhtmltopdf/packaging/releases/download/${WKHTML_VERSION}/wkhtmltox_${WKHTML_VERSION}.bookworm_${ARCH}.deb"; \
+    "https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb"; \
   dpkg -i /tmp/wkhtmltox.deb || true; \
   apt-get update; \
   apt-get -f install -y --no-install-recommends; \
