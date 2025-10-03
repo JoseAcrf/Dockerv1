@@ -1,25 +1,29 @@
-# odoo/Dockerfile (paqueteado mínimo y compatible para evitar exit code 100)
+# odoo/Dockerfile (robusto frente a "exit code 100" en apt)
 FROM odoo:19.0
 
+ENV DEBIAN_FRONTEND=noninteractive
 USER root
 ARG WKHTML_VERSION=0.12.6.1-3
 
-# Paquetes base + toolchain para compilar wheels (rjsmin/rcssmin/psycogreen) y libs necesarias
+# Paquetes base (estrictamente necesarios)
 RUN set -eux; \
   apt-get update; \
   apt-get install -y --no-install-recommends \
-    ca-certificates curl git \
-    build-essential python3-dev \
+    ca-certificates curl git build-essential python3-dev \
     libpq-dev libldap2-dev libsasl2-dev libffi-dev libxml2-dev libxslt1-dev \
-    fontconfig libx11-6 libxext6 libxrender1 \
-    xfonts-75dpi xfonts-base \
-    libjpeg62-turbo libpng16-16 \
-    fonts-dejavu-core fonts-dejavu-extra fonts-liberation \
+    fontconfig libxrender1 libxext6 libx11-6 libjpeg62-turbo libpng16-16 zlib1g \
   ; rm -rf /var/lib/apt/lists/*
 
-# Fuentes CJK (opcional); si no están en mirrors del entorno, no falla el build
-RUN set -eux; \
-  apt-get update; \
+# Paquetes opcionales (si fallan en tu mirror, el build continua)
+RUN set -eux; apt-get update; \
+  apt-get install -y --no-install-recommends xfonts-base xfonts-75dpi || true; \
+  rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; apt-get update; \
+  apt-get install -y --no-install-recommends fonts-dejavu-core fonts-dejavu-extra fonts-liberation || true; \
+  rm -rf /var/lib/apt/lists/*
+
+RUN set -eux; apt-get update; \
   apt-get install -y --no-install-recommends fonts-noto-cjk || true; \
   rm -rf /var/lib/apt/lists/*
 
@@ -42,7 +46,7 @@ RUN set -eux; \
 
 # Requisitos pip de addons (rjsmin/rcssmin/psycogreen, etc.)
 COPY requirements.txt /opt/odoo/requirements.txt
-RUN if [ -s /opt/odoo/requirements.txt ]; then pip install --no-cache-dir -r /opt/odoo/requirements.txt; fi
+RUN if [ -s /opt/odoo/requirements.txt ] ; then pip install --no-cache-dir -r /opt/odoo/requirements.txt ; fi
 
 # Logs
 RUN mkdir -p /var/log/odoo && chown -R odoo:odoo /var/log/odoo
