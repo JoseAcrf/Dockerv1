@@ -1,4 +1,3 @@
-# odoo/Dockerfile (bloques APT estables)
 FROM odoo:19.0
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -6,11 +5,9 @@ SHELL ["/bin/bash","-o","pipefail","-c"]
 USER root
 ARG WKHTML_VERSION=0.12.6.1-3
 
-# APT robusto (reintentos + IPv4)
 RUN set -eux; \
   printf 'Acquire::Retries "5";\nAcquire::ForceIPv4 "true";\n' > /etc/apt/apt.conf.d/99retries
 
-# Esenciales (si falla aquí, el log dirá exactamente qué paquete falta)
 RUN set -eux; \
   apt-get update; \
   apt-get install -y --no-install-recommends \
@@ -19,7 +16,6 @@ RUN set -eux; \
     fontconfig libx11-6 libxext6 libxrender1 libjpeg62-turbo libpng16-16 zlib1g \
   ; rm -rf /var/lib/apt/lists/*
 
-# Opcionales (no rompen el build si tu mirror no los tiene)
 RUN set -eux; \
   apt-get update; \
   apt-get install -y --no-install-recommends xfonts-base || true; \
@@ -31,7 +27,6 @@ RUN set -eux; \
   apt-get install -y --no-install-recommends gsfonts || true; \
   rm -rf /var/lib/apt/lists/*
 
-# wkhtmltopdf 0.12.6.1-3 (Qt parcheado)
 RUN set -eux; \
   ARCH="$(dpkg --print-architecture)"; \
   case "$ARCH" in amd64|arm64) : ;; *) echo "unsupported arch: $ARCH"; exit 1;; esac; \
@@ -44,7 +39,6 @@ RUN set -eux; \
   rm -f /tmp/wkhtmltox.deb; \
   rm -rf /var/lib/apt/lists/*
 
-# pip de addons (si aplica)
 COPY requirements.txt /opt/odoo/requirements.txt
 RUN if [ -s /opt/odoo/requirements.txt ]; then pip install --no-cache-dir -r /opt/odoo/requirements.txt; fi
 
