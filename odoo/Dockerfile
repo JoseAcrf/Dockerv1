@@ -1,3 +1,4 @@
+
 FROM odoo:19.0
 
 ENV DEBIAN_FRONTEND=noninteractive
