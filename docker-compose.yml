@@ -1,4 +1,3 @@
-# docker-compose.yml (servicios renombrados: hsodb y hso-web; volúmenes únicos)
 version: "3.8"
 
 services:
@@ -28,8 +27,8 @@ services:
       hsodb:
         condition: service_healthy
     ports:
-      - "8096:8096"
-      - "8087:8087"
+      - "8096:8069"   # host:container
+      - "8087:8072"   # host:container
     environment:
       HOST: hsodb
       USER: odoo
