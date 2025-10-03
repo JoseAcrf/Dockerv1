@@ -1,15 +1,15 @@
+# docker-compose.yml (servicios renombrados: hsodb y hso-web; volúmenes únicos)
 version: "3.8"
 
 services:
-  db:
+  hsodb:
     image: postgres:16
-    container_name: odoo19-db
     environment:
       POSTGRES_DB: odoo
       POSTGRES_USER: odoo
       POSTGRES_PASSWORD: odoo
     volumes:
-      - db-data:/var/lib/postgresql/data
+      - hso-db-data:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U odoo -d odoo"]
@@ -18,22 +18,20 @@ services:
       retries: 10
     restart: unless-stopped
 
-  odoo:
+  hso-web:
     build:
       context: ./odoo
-      dockerfile: Dockerfile
       args:
         WKHTML_VERSION: "0.12.6.1-3"
     image: odoo19-wkhtml:latest
-    container_name: odoo19
     depends_on:
-      db:
+      hsodb:
         condition: service_healthy
     ports:
-      - "8069:8069"
-      - "8072:8072"
+      - "8096:8096"
+      - "8087:8087"
     environment:
-      HOST: db
+      HOST: hsodb
       USER: odoo
       PASSWORD: odoo
     ulimits:
@@ -41,7 +39,7 @@ services:
         soft: 65535
         hard: 65535
     volumes:
-      - odoo-data:/var/lib/odoo
+      - hso-odoo-data:/var/lib/odoo
       - ./config:/etc/odoo
       - ./addons:/mnt/extra-addons
       - ./logs:/var/log/odoo
@@ -54,4 +52,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  db-data:
+  hso-db-data:
+  hso-odoo-data:
