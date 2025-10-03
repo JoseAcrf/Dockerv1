@@ -1,0 +1,8 @@
+# Volúmenes / datos locales
+logs/*
+!logs/.gitkeep
+db-data/
+odoo-data/
+__pycache__/
+*.pyc
+.env

@@ -1,0 +1,6 @@
+# Aceleradores de minificación en runtime (JS/CSS)
+rcssmin
+rjsmin
+
+# Concurrencia estable con gevent (workers + longpolling)
+psycogreen
