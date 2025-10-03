@@ -1,4 +1,4 @@
-# odoo/Dockerfile (minimal y alineado con lo imprescindible)
+# odoo/Dockerfile — minimal (evita apt exit code 100)
 FROM odoo:19.0
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -6,23 +6,17 @@ SHELL ["/bin/bash","-o","pipefail","-c"]
 USER root
 ARG WKHTML_VERSION=0.12.6.1-3
 
-# APT robusto (reintentos + IPv4)
-RUN printf 'Acquire::Retries "5";\nAcquire::ForceIPv4 "true";\n' > /etc/apt/apt.conf.d/99retries
-
-# Solo lo necesario para Odoo 19 + compilar wheels de addons
+# APT robusto y solo paquetes esenciales (evitamos listas largas problemáticas)
 RUN set -eux; \
+  printf 'Acquire::Retries "5";\nAcquire::ForceIPv4 "true";\n' > /etc/apt/apt.conf.d/99retries; \
   apt-get update; \
-  apt-get install -y --no-install-recommends \
-    ca-certificates curl git build-essential python3-dev \
-    libpq-dev libsasl2-dev libldap2-dev libffi-dev libssl-dev \
-    libxml2-dev libxslt1-dev zlib1g-dev \
-    libjpeg62-turbo-dev libpng-dev liblcms2-dev \
-    fontconfig libx11-6 libxext6 libxrender1 xfonts-base xfonts-75dpi \
-  ; rm -rf /var/lib/apt/lists/*
+  apt-get install -y --no-install-recommends ca-certificates curl; \
+  rm -rf /var/lib/apt/lists/*
 
-# wkhtmltopdf 0.12.6.1-3 (Qt parcheado) para Debian 12 (Bookworm)
+# Instala wkhtmltopdf 0.12.6.1-3 (Qt parcheado) y que APT resuelva dependencias
 RUN set -eux; \
   ARCH="$(dpkg --print-architecture)"; \
+  case "$ARCH" in amd64|arm64) : ;; *) echo "unsupported arch: $ARCH"; exit 1;; esac; \
   curl -fsSL -o /tmp/wkhtmltox.deb \
     "https://github.com/wkhtmltopdf/packaging/releases/download/${WKHTML_VERSION}/wkhtmltox_${WKHTML_VERSION}.bookworm_${ARCH}.deb"; \
   dpkg -i /tmp/wkhtmltox.deb || true; \
@@ -33,7 +27,14 @@ RUN set -eux; \
   rm -f /tmp/wkhtmltox.deb; \
   rm -rf /var/lib/apt/lists/*
 
-# Requisitos pip de addons (si existe)
+# Fuentes/xfonts OPCIONALES (no rompen el build si tu mirror no las tiene)
+RUN set -eux; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends xfonts-base xfonts-75dpi || true; \
+  apt-get install -y --no-install-recommends fonts-dejavu-core fonts-dejavu-extra fonts-liberation || true; \
+  rm -rf /var/lib/apt/lists/*
+
+# Requisitos pip de addons (si existe el archivo)
 COPY requirements.txt /opt/odoo/requirements.txt
 RUN if [ -s /opt/odoo/requirements.txt ]; then pip install --no-cache-dir -r /opt/odoo/requirements.txt; fi
 
