@@ -1,3 +1,4 @@
+# docker-compose.yml (puertos externos 8096/8087 → 8069/8072 internos)
 version: "3.8"
 
 services:
@@ -27,8 +28,8 @@ services:
       hsodb:
         condition: service_healthy
     ports:
-      - "8096:8069"   # host:container
-      - "8087:8072"   # host:container
+      - "8096:8069"   # web
+      - "8087:8072"   # longpolling
     environment:
       HOST: hsodb
       USER: odoo
